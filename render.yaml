@@ -3,7 +3,7 @@ services:
   - type: web
     name: get-resume-ai-backend
     env: node
-    rootDir: server
+    rootDir: GETRESUMEAIFINAL-main/server
     buildCommand: npm install
     startCommand: npm start
     envVars:
@@ -35,7 +35,7 @@ services:
   - type: web
     name: get-resume-ai-frontend
     env: static
-    rootDir: client
+    rootDir: GETRESUMEAIFINAL-main/client
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     # SPA routing fallback: redirect all 404s to index.html
