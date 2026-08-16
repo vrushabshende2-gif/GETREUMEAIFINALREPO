@@ -1,0 +1,50 @@
+services:
+  # 1. Node.js Backend Service
+  - type: web
+    name: get-resume-ai-backend
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: ALLOWED_ORIGINS
+        # Allow requests from the frontend site (populated by Render when the frontend is deployed)
+        value: https://get-resume-ai-frontend.onrender.com
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@getresume.ai
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  # 2. Vite React Frontend (Static Site)
+  - type: web
+    name: get-resume-ai-frontend
+    env: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    # SPA routing fallback: redirect all 404s to index.html
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        # We can dynamically point this to the backend we just created above using Render's internal env variables.
+        # But for external client-side calls, it needs the public URL.
+        value: https://get-resume-ai-backend.onrender.com/api
