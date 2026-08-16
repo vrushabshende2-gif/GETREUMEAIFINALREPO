@@ -3,6 +3,7 @@ services:
   - type: web
     name: get-resume-ai-backend
     env: node
+    plan: free
     rootDir: GETRESUMEAIFINAL-main/server
     buildCommand: npm install
     startCommand: npm start
