@@ -1,3 +1,9 @@
+const dns = require('dns');
+// Force IPv4 DNS resolution first to prevent ENETUNREACH errors on cloud hosts like Render
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const app = require('./app');
 const connectDB = require('./config/db');
 
