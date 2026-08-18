@@ -13,46 +13,52 @@ const setTokenCookie = (res, token) => {
 };
 
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Please add all fields' });
-  }
-
-  const userExists = await User.findOne({ email: email.toLowerCase() });
-
-  if (userExists) {
-    return res.status(400).json({ message: 'User already exists' });
-  }
-
-  const otp = generateOTP();
-  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-  const user = await User.create({
-    name,
-    email: email.toLowerCase(),
-    password,
-    otp,
-    otpExpiry,
-    isVerified: false,
-  });
-
-  if (user) {
-    try {
-      await sendOTPEmail(email, otp);
-      res.status(201).json({
-        name: user.name,
-        email: user.email,
-        message: 'OTP sent to your email',
-      });
-    } catch (error) {
-      console.error('OTP Send Error:', error.message);
-      await User.deleteOne({ _id: user._id });
-      return res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please add all fields' });
     }
-  } else {
-    res.status(400);
-    throw new Error('Invalid user data');
+
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+
+    if (userExists) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      password,
+      otp,
+      otpExpiry,
+      isVerified: false,
+    });
+
+    if (user) {
+      try {
+        await sendOTPEmail(email, otp);
+        return res.status(201).json({
+          name: user.name,
+          email: user.email,
+          message: 'OTP sent to your email',
+        });
+      } catch (error) {
+        console.error('[OTP Error] Failed to send verification email:', error.message);
+        await User.deleteOne({ _id: user._id });
+        return res.status(500).json({ 
+          message: `Failed to send verification email: ${error.message}. Please check your EMAIL_USER and EMAIL_PASS configuration.`,
+        });
+      }
+    } else {
+      return res.status(400).json({ message: 'Invalid user data' });
+    }
+  } catch (err) {
+    console.error('[Register Error]:', err.message);
+    return res.status(500).json({ message: err.message || 'Server error during registration' });
   }
 };
 

@@ -24,10 +24,14 @@ const createTransporter = () => {
 };
 
 const sendOTPEmail = async (email, otp) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('EMAIL_USER or EMAIL_PASS is not configured in server environment variables.');
+  }
+
   const transporter = createTransporter();
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"GetResumeAI" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'GetResumeAI - Email Verification OTP',
     html: `
