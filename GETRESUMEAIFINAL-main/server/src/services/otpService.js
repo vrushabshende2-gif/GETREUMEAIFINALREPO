@@ -13,6 +13,9 @@ const createTransporter = () => {
       pass: process.env.EMAIL_PASS,
     },
     secure: true,
+    connectionTimeout: 10000, // 10 seconds timeout
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     tls: {
       rejectUnauthorized: true,
     },
