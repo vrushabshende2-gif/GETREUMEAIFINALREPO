@@ -39,20 +39,12 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
-      try {
-        await sendOTPEmail(email, otp);
-        return res.status(201).json({
-          name: user.name,
-          email: user.email,
-          message: 'OTP sent to your email',
-        });
-      } catch (error) {
-        console.error('[OTP Error] Failed to send verification email:', error.message);
-        await User.deleteOne({ _id: user._id });
-        return res.status(500).json({ 
-          message: `Failed to send verification email: ${error.message}. Please check your EMAIL_USER and EMAIL_PASS configuration.`,
-        });
-      }
+      await sendOTPEmail(email, otp);
+      return res.status(201).json({
+        name: user.name,
+        email: user.email,
+        message: 'Verification code sent to your email',
+      });
     } else {
       return res.status(400).json({ message: 'Invalid user data' });
     }
@@ -133,12 +125,8 @@ const resendOTP = async (req, res) => {
   user.otpExpiry = otpExpiry;
   await user.save({ validateBeforeSave: false });
 
-  try {
-    await sendOTPEmail(email, otp);
-    res.json({ message: 'OTP resent successfully' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
-  }
+  await sendOTPEmail(email, otp);
+  return res.json({ message: 'OTP resent successfully' });
 };
 
 const loginUser = async (req, res) => {
@@ -212,12 +200,8 @@ const forgotPassword = async (req, res) => {
   user.otpExpiry = otpExpiry;
   await user.save({ validateBeforeSave: false });
 
-  try {
-    await sendOTPEmail(email, otp);
-    res.json({ message: 'OTP sent to your email for password reset' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
-  }
+  await sendOTPEmail(email, otp);
+  return res.json({ message: 'OTP sent to your email for password reset' });
 };
 
 const resetPassword = async (req, res) => {
