@@ -12,6 +12,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust reverse proxy for rate limiter (required for Render)
+app.set('trust proxy', 1);
+
 // Parse cookies
 app.use(cookieParser());
 
