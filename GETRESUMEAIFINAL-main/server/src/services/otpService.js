@@ -1,5 +1,11 @@
+const dns = require('dns');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+
+// Set default DNS resolution to IPv4 first
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const generateOTP = () => {
   return crypto.randomInt(1000, 9999).toString();
@@ -7,14 +13,26 @@ const generateOTP = () => {
 
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Port 587 uses STARTTLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    // Force IPv4 lookup directly in Nodemailer to prevent Render IPv6 ENETUNREACH
+    lookup: (hostname, options, callback) => {
+      dns.lookup(hostname, { family: 4 }, (err, address, family) => {
+        if (err) return callback(err);
+        callback(null, address, 4);
+      });
+    },
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 20000,
+    tls: {
+      rejectUnauthorized: false,
+    },
   });
 };
 
