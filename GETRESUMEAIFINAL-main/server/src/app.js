@@ -25,20 +25,30 @@ app.use(helmet());
 app.use(mongoSanitize());
 
 // Dynamic CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+const rawOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:5173', 'http://localhost:5174'];
+
+const allowedOrigins = rawOrigins
+  .map((o) => o.trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, ''))
+  .filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
     // allow requests with no origin (like mobile apps, curl, or Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Blocked by CORS policy'));
+    if (!origin) return callback(null, true);
+    
+    const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+    if (allowedOrigins.includes(normalizedOrigin) || allowedOrigins.includes('*')) {
+      return callback(null, true);
     }
+    
+    console.warn(`[CORS] Request blocked from origin: "${origin}" (Allowed: ${allowedOrigins.join(', ')})`);
+    return callback(null, false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 
 // Body parser
